@@ -6,12 +6,11 @@ import imutils
 import time
 import cv2
 import os
-
+import pygame
 # Local configuration
-from utils.config import CLASSES, CAMERA_INPUT, PROTO, CAFFE
+from utils.config import CLASSES, CAMERA_INPUT, PROTO, CAFFE, SOUND
 
 # detect, then generate a set of bounding box colors for each class
-
 COLORS = np.random.uniform(0, 255, size=(len(CLASSES), 3))
 
 # load our serialized model from disk
@@ -26,9 +25,34 @@ time.sleep(2.0)
 fps = FPS().start()
 
 
+def play_sound():
+	pygame.init()
+	pygame.mixer.music.load(SOUND)
+	pygame.mixer.music.play()
+	while pygame.mixer.music.get_busy():
+		pygame.time.Clock().tick(10)
+	pygame.quit()
+
+
+# play_sound()
+
+def count_files_in_folder(folder_path):
+    num_files = 0
+    for _, _, files in os.walk(folder_path):
+        num_files += len(files)
+    return num_files
+
+def create_database(img, path):
+	count = count_files_in_folder(path)
+	img = cv2.resize(img, (300, 300))
+	name = path+"img_"+str(count)+".jpg"
+	cv2.imwrite(name, img)
+
+
 def save_to_database(img, clas): # this will save the images in folder
 	if clas == 'person':
-		pass
+		path = "./database/person/kalyan/"
+		create_database(img, path)
 	elif clas == 'aeroplane':
 		pass
 	elif clas == 'boat':
@@ -74,7 +98,9 @@ def main():
 				idx = int(detections[0, 0, i, 1])
 				box = detections[0, 0, i, 3:7] * np.array([w, h, w, h])
 				(startX, startY, endX, endY) = box.astype("int")
-
+				crop_img = frame[startY:endY, startX:endX]
+				save_to_database(crop_img, CLASSES[idx])
+				cv2.imshow("CROP", crop_img)
 				# draw the prediction on the frame
 				label = "{}: {:.2f}%".format(CLASSES[idx], confidence * 100)
 				cv2.rectangle(frame, (startX, startY), (endX, endY), COLORS[idx], 2)

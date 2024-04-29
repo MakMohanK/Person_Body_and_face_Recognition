@@ -30,3 +30,5 @@ CAMERA_INPUT = 0
 
 PROTO = './models/MobileNetSSD_deploy.prototxt.txt'
 CAFFE = './models/MobileNetSSD_deploy.caffemodel'
+
+SOUND = './audio/explosion.mp3'
