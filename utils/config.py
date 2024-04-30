@@ -32,3 +32,6 @@ PROTO = './models/MobileNetSSD_deploy.prototxt.txt'
 CAFFE = './models/MobileNetSSD_deploy.caffemodel'
 
 SOUND = './audio/explosion.mp3'
+
+MODEL = './models/converted_keras/keras_model.h5'
+LABEL = './models/converted_keras/labels.txt'

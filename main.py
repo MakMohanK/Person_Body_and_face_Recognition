@@ -8,7 +8,18 @@ import cv2
 import os
 import pygame
 # Local configuration
-from utils.config import CLASSES, CAMERA_INPUT, PROTO, CAFFE, SOUND
+from utils.config import CLASSES, CAMERA_INPUT, PROTO, CAFFE, SOUND, LABEL, MODEL
+
+from keras.models import load_model  # TensorFlow is required for Keras to work
+from PIL import Image, ImageOps  # Install pillow instead of PIL
+import numpy as np
+
+# Disable scientific notation for clarity
+np.set_printoptions(suppress=True)
+
+# Load the model and labels
+model = load_model(MODEL, compile=False)
+class_names = open(LABEL, "r").readlines()
 
 # detect, then generate a set of bounding box colors for each class
 COLORS = np.random.uniform(0, 255, size=(len(CLASSES), 3))
@@ -52,17 +63,43 @@ def create_database(img, path):
 def save_to_database(img, clas): # this will save the images in folder
 	if clas == 'person':
 		path = "./database/person/kalyan/"
-		create_database(img, path)
+		recognise(img)
+		# create_database(img, path)
+
 	elif clas == 'aeroplane':
 		pass
+
 	elif clas == 'boat':
 		pass
+
 	elif clas == 'bus':
 		pass
+
 	elif clas == 'car':
 		pass
+
 	elif clas == 'motorbike':
 		pass
+
+
+
+def recognise(image):
+	try:
+		data = np.ndarray(shape=(1, 224, 224, 3), dtype=np.float32)
+		image  = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+		image = Image.fromarray(image)
+		image = ImageOps.fit(image, (224, 224), Image.Resampling.LANCZOS)
+		image_array = np.asarray(image)
+		normalized_image_array = (image_array.astype(np.float32) / 127.5) - 1
+		data[0] = normalized_image_array
+		prediction = model.predict(data)
+		index = np.argmax(prediction)
+		class_name = class_names[index]
+		confidence_score = prediction[0][index]
+		print("Class:", class_name[2:], end="")
+		print("Confidence Score:", confidence_score)
+	except:
+		print("[INFO].... No object detected")
 
 
 
@@ -99,13 +136,16 @@ def main():
 				box = detections[0, 0, i, 3:7] * np.array([w, h, w, h])
 				(startX, startY, endX, endY) = box.astype("int")
 				crop_img = frame[startY:endY, startX:endX]
-				save_to_database(crop_img, CLASSES[idx])
-				cv2.imshow("CROP", crop_img)
-				# draw the prediction on the frame
-				label = "{}: {:.2f}%".format(CLASSES[idx], confidence * 100)
-				cv2.rectangle(frame, (startX, startY), (endX, endY), COLORS[idx], 2)
-				y = startY - 15 if startY - 15 > 15 else startY + 15
-				cv2.putText(frame, label, (startX, y), cv2.FONT_HERSHEY_SIMPLEX, 0.5, COLORS[idx], 2)
+				try:
+					save_to_database(crop_img, CLASSES[idx])
+					cv2.imshow("CROP", crop_img)
+					# draw the prediction on the frame
+					label = "{}: {:.2f}%".format(CLASSES[idx], confidence * 100)
+					cv2.rectangle(frame, (startX, startY), (endX, endY), COLORS[idx], 2)
+					y = startY - 15 if startY - 15 > 15 else startY + 15
+					cv2.putText(frame, label, (startX, y), cv2.FONT_HERSHEY_SIMPLEX, 0.5, COLORS[idx], 2)
+				except:
+					print("[INFO].... Unable to crop the image")
 
 		# show the output frame
 		cv2.imshow("OUTPUT", frame)
