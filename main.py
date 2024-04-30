@@ -5,7 +5,7 @@ import numpy as np
 import imutils
 import time
 import cv2
-import os
+import sys, os
 import pygame
 # Local configuration
 from utils.config import CLASSES, CAMERA_INPUT, PROTO, CAFFE, SOUND, LABEL, MODEL
@@ -36,6 +36,9 @@ time.sleep(2.0)
 fps = FPS().start()
 
 
+TARGET = 'Mohan'
+
+
 def play_sound():
 	pygame.init()
 	pygame.mixer.music.load(SOUND)
@@ -62,7 +65,7 @@ def create_database(img, path):
 
 def save_to_database(img, clas): # this will save the images in folder
 	if clas == 'person':
-		path = "./database/person/kalyan/"
+		# path = "./database/person/mohan/"
 		recognise(img)
 		# create_database(img, path)
 
@@ -98,6 +101,13 @@ def recognise(image):
 		confidence_score = prediction[0][index]
 		print("Class:", class_name[2:], end="")
 		print("Confidence Score:", confidence_score)
+		print(class_name[2:], type(class_name[2:]))
+
+		if TARGET in class_name[2:]:
+			print(class_name[2:], type(class_name[2:]))
+			play_sound()
+			exit()
+
 	except:
 		print("[INFO].... No object detected")
 
